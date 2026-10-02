@@ -108,9 +108,10 @@ def evaluate(name: str, p: dict[str, Any]) -> dict[str, Any]:
         result = valid(permit, _dt(p["at"]), int(p["max_age"]))
         return {"decision": "enter" if result else "deny", "value": result, "evidence": {"role_separation": permit.attendant != permit.entrant}}
     if name == "outage_impact":
-        rows = [Customer(str(x["account"]), str(x["node"]), bool(x["critical"]), int(x["population"]) if p.get("population_basis") == "residents" else 1) for x in p["customers"]]
+        rows = [Customer(str(x["account"]), str(x["node"]), bool(x["critical"]), int(x["population"])) for x in p["customers"]]
         result = summarize(rows, set(p["nodes"]))
-        return {"decision": "notify" if result["population"] else "clear", "value": result, "evidence": {"nodes": sorted(p["nodes"])}}
+        affected = result["population"] > 0 or result["critical"] > 0
+        return {"decision": "notify" if affected else "clear", "value": result, "evidence": {"nodes": sorted(p["nodes"])}}
     if name == "incident_escalation":
         i = p["incident"]
         incident = Incident(int(i["severity"]), _dt(i["opened"]), _dt(i["ack"]) if i.get("ack") else None)
